@@ -8,8 +8,13 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  GitBranch,
+  Layers,
+  Calendar,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -121,39 +126,70 @@ export default function AppsPage() {
         {currentApps.map((app) => (
           <Card
             key={app.id}
-            className="group overflow-hidden border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] bg-card/50 backdrop-blur-sm"
+            className="group overflow-hidden border-border/40 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(0,240,255,0.1)] bg-card/50 backdrop-blur-sm hover:-translate-y-1"
           >
-            <div className={`h-32 w-full ${app.thumbnail} relative`}>
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-              <div className="absolute bottom-4 left-4 text-white font-bold text-xl drop-shadow-md">
-                {app.name}
+            <div
+              className={`h-40 w-full ${app.thumbnail} relative overflow-hidden`}
+            >
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-500" />
+              <div className="absolute top-4 right-4 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
+                <Badge className="bg-white/90 text-black hover:bg-white cursor-default shadow-lg backdrop-blur-md">
+                  Ready to Deploy
+                </Badge>
+              </div>
+              <div className="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black/80 to-transparent">
+                <h3 className="text-white font-bold text-2xl tracking-tight drop-shadow-md mb-1">
+                  {app.name}
+                </h3>
+                <p className="text-white/80 text-sm line-clamp-1 font-light">
+                  {app.description}
+                </p>
               </div>
             </div>
-            <CardHeader>
-              <CardDescription>{app.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Version</span>
-                <span className="font-mono">{app.version}</span>
+
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors border border-border/50">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase font-semibold tracking-wider">
+                    <GitBranch className="h-3.5 w-3.5" />
+                    Version
+                  </div>
+                  <span className="font-mono text-sm font-medium text-foreground">
+                    {app.version}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors border border-border/50">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase font-semibold tracking-wider">
+                    <Layers className="h-3.5 w-3.5" />
+                    Services
+                  </div>
+                  <span className="font-mono text-sm font-medium text-foreground">
+                    {app.servicesCount} Microservices
+                  </span>
+                </div>
+
+                <div className="col-span-2 flex flex-col gap-1.5 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors border border-border/50">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase font-semibold tracking-wider">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Created At
+                  </div>
+                  <span className="font-mono text-sm font-medium text-foreground">
+                    {app.createdAt}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Services</span>
-                <span>{app.servicesCount}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Created</span>
-                <span>{app.createdAt}</span>
-              </div>
-            </CardContent>
-            <CardFooter>
+
               <Button
-                className="w-full gap-2"
+                className="w-full gap-2 group/btn relative overflow-hidden"
                 onClick={() => handleDownloadClick(app)}
+                size="lg"
               >
-                <Download className="h-4 w-4" /> Deploy / Download
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500" />
+                <Rocket className="h-4 w-4 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
+                <span className="font-semibold">Deploy Application</span>
               </Button>
-            </CardFooter>
+            </CardContent>
           </Card>
         ))}
       </div>
@@ -265,11 +301,15 @@ export default function AppsPage() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsDownloadOpen(false)}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsDownloadOpen(false)}
+              className="sm:w-1/2"
+            >
               Cancel
             </Button>
-            <Button onClick={handleDownloadConfirm} className="gap-2">
+            <Button onClick={handleDownloadConfirm} className="gap-2 sm:w-1/2">
               <Download className="h-4 w-4" /> Download Package
             </Button>
           </DialogFooter>

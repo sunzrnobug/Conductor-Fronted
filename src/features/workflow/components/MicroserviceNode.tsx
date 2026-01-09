@@ -53,6 +53,11 @@ export const MicroserviceNode = memo(({ data, selected }: NodeProps) => {
         <div className="flex items-center gap-2">
           <div className="h-3 w-3 rounded-full bg-current opacity-70" />
           <div className="flex flex-col">
+            {nodeData.serviceName && (
+              <span className="text-[10px] text-primary/80 mb-0.5 font-medium uppercase tracking-wider">
+                {nodeData.serviceName}
+              </span>
+            )}
             <span className="font-semibold text-sm tracking-wide leading-none">
               {nodeData.label}
             </span>

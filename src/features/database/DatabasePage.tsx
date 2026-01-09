@@ -9,6 +9,7 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
+  Link,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,13 @@ export default function DatabasePage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [uploadType, setUploadType] = useState<string>("PostgreSQL");
 
+  // MinIO Connection State
+  const [minioConfig, setMinioConfig] = useState({
+    ip: "",
+    port: "",
+    bucket: "",
+  });
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -110,7 +118,19 @@ export default function DatabasePage() {
   const [editedData, setEditedData] = useState<any[]>([]);
 
   const handleUpload = () => {
-    if (selectedFile) {
+    if (uploadType === "MinIO") {
+      if (!minioConfig.ip || !minioConfig.port || !minioConfig.bucket) return;
+      const newDb: DatabaseItem = {
+        id: Math.random().toString(),
+        name: minioConfig.bucket,
+        type: "MinIO",
+        size: "0 MB", // Initial size
+        records: 0,
+        lastModified: new Date().toISOString().split("T")[0],
+      };
+      setDatabases([...databases, newDb]);
+      setMinioConfig({ ip: "", port: "", bucket: "" });
+    } else if (selectedFile) {
       const newDb: DatabaseItem = {
         id: Math.random().toString(),
         name: selectedFile.name.split(".")[0],
@@ -177,17 +197,28 @@ export default function DatabasePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
-        {/* Upload Card */}
+        {/* Upload/Connect Card */}
         <Card className="md:col-span-1 border-dashed border-2 border-muted hover:border-primary/50 transition-colors bg-card/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" /> Upload Database
+              {uploadType === "MinIO" ? (
+                <Link className="h-5 w-5" />
+              ) : (
+                <Upload className="h-5 w-5" />
+              )}
+              {uploadType === "MinIO"
+                ? "Connect Data Source"
+                : "Upload Database"}
             </CardTitle>
-            <CardDescription>Support .sql, .dump files</CardDescription>
+            <CardDescription>
+              {uploadType === "MinIO"
+                ? "Connect to MinIO Object Storage"
+                : "Support .sql, .dump files"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="db-type">Database Type</Label>
+              <Label htmlFor="db-type">Source Type</Label>
               <select
                 id="db-type"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -200,23 +231,68 @@ export default function DatabasePage() {
                 <option>MinIO</option>
               </select>
             </div>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="file">File</Label>
-              <Input
-                id="file"
-                type="file"
-                accept=".sql,.dump"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              />
-            </div>
+
+            {uploadType === "MinIO" ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2 grid w-full items-center gap-1.5">
+                    <Label htmlFor="minio-ip">IP Address</Label>
+                    <Input
+                      id="minio-ip"
+                      placeholder="127.0.0.1"
+                      value={minioConfig.ip}
+                      onChange={(e) =>
+                        setMinioConfig({ ...minioConfig, ip: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="minio-port">Port</Label>
+                    <Input
+                      id="minio-port"
+                      placeholder="9000"
+                      value={minioConfig.port}
+                      onChange={(e) =>
+                        setMinioConfig({ ...minioConfig, port: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid w-full max-w-sm items-center gap-1.5">
+                  <Label htmlFor="minio-bucket">Bucket Name</Label>
+                  <Input
+                    id="minio-bucket"
+                    placeholder="my-bucket"
+                    value={minioConfig.bucket}
+                    onChange={(e) =>
+                      setMinioConfig({ ...minioConfig, bucket: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Label htmlFor="file">File</Label>
+                <Input
+                  id="file"
+                  type="file"
+                  accept=".sql,.dump"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                />
+              </div>
+            )}
           </CardContent>
           <CardFooter>
             <Button
               className="w-full"
-              disabled={!selectedFile}
+              disabled={
+                uploadType === "MinIO"
+                  ? !minioConfig.ip || !minioConfig.port || !minioConfig.bucket
+                  : !selectedFile
+              }
               onClick={handleUpload}
             >
-              Upload
+              {uploadType === "MinIO" ? "Connect" : "Upload"}
             </Button>
           </CardFooter>
         </Card>
@@ -380,8 +456,8 @@ export default function DatabasePage() {
             </Table>
           </div>
 
-          <DialogFooter className="flex justify-between sm:justify-between">
-            <div className="flex items-center gap-2">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between w-full">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
               <Label
                 htmlFor="edit-mode"
                 className="text-sm text-muted-foreground"
@@ -396,12 +472,19 @@ export default function DatabasePage() {
                 {isEditing ? "Editing On" : "Editing Off"}
               </Button>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => setIsPreviewOpen(false)}
+                className="flex-1 sm:flex-none"
+              >
                 Close
               </Button>
               {isEditing && (
-                <Button onClick={handleSaveData}>
+                <Button
+                  onClick={handleSaveData}
+                  className="flex-1 sm:flex-none"
+                >
                   <Save className="mr-2 h-4 w-4" /> Save Changes
                 </Button>
               )}

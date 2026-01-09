@@ -15,7 +15,7 @@ import "@xyflow/react/dist/style.css";
 import { WorkflowSidebar } from "./components/WorkflowSidebar";
 import { MicroserviceNode } from "./components/MicroserviceNode";
 import { WorkflowContextMenu } from "./components/WorkflowContextMenu";
-import { Play, Download, Archive, Save, Database, X } from "lucide-react";
+import { Play, Download, Archive, Save, Database, X, Edit } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import {
   Dialog,
@@ -383,9 +383,12 @@ export default function WorkflowPage() {
 
       {/* Archive Dialog */}
       <Dialog open={isArchiveDialogOpen} onOpenChange={setIsArchiveDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Archive Workflow</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Archive className="w-5 h-5" />
+              Archive Workflow
+            </DialogTitle>
             <DialogDescription>
               Save the current workflow state to history archives.
             </DialogDescription>
@@ -402,23 +405,29 @@ export default function WorkflowPage() {
               onChange={(e) => setArchiveName(e.target.value)}
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
               onClick={() => setIsArchiveDialogOpen(false)}
+              className="sm:w-1/2"
             >
               Cancel
             </Button>
-            <Button onClick={confirmArchive}>Archive</Button>
+            <Button onClick={confirmArchive} className="sm:w-1/2">
+              Archive
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* DB Mount Dialog */}
       <Dialog open={isDbMountDialogOpen} onOpenChange={setIsDbMountDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Mount Database</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Mount Database
+            </DialogTitle>
             <DialogDescription>
               Associate a database resource with this microapplication node.
             </DialogDescription>
@@ -485,14 +494,17 @@ export default function WorkflowPage() {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
               onClick={() => setIsDbMountDialogOpen(false)}
+              className="sm:w-1/2"
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveDbMount}>Save Configuration</Button>
+            <Button onClick={handleSaveDbMount} className="sm:w-1/2">
+              Save Configuration
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -502,9 +514,12 @@ export default function WorkflowPage() {
         open={isDescriptionDialogOpen}
         onOpenChange={setIsDescriptionDialogOpen}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Node Description</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5" />
+              Edit Node Description
+            </DialogTitle>
             <DialogDescription>
               Add a brief description for this microapplication node.
             </DialogDescription>
@@ -521,14 +536,17 @@ export default function WorkflowPage() {
               onChange={(e) => setDescriptionText(e.target.value)}
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
               onClick={() => setIsDescriptionDialogOpen(false)}
+              className="sm:w-1/2"
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveDescription}>Save</Button>
+            <Button onClick={handleSaveDescription} className="sm:w-1/2">
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
