@@ -97,6 +97,18 @@ export default function DatabasePage() {
     bucket: "",
   });
 
+  // Remote Connection State
+  const [connectionMode, setConnectionMode] = useState<"file" | "remote">(
+    "file"
+  );
+  const [remoteConfig, setRemoteConfig] = useState({
+    ip: "",
+    port: "",
+    dbName: "",
+    username: "",
+    password: "",
+  });
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -130,17 +142,39 @@ export default function DatabasePage() {
       };
       setDatabases([...databases, newDb]);
       setMinioConfig({ ip: "", port: "", bucket: "" });
-    } else if (selectedFile) {
-      const newDb: DatabaseItem = {
-        id: Math.random().toString(),
-        name: selectedFile.name.split(".")[0],
-        type: uploadType as any,
-        size: (selectedFile.size / 1024 / 1024).toFixed(2) + " MB",
-        records: 0,
-        lastModified: new Date().toISOString().split("T")[0],
-      };
-      setDatabases([...databases, newDb]);
-      setSelectedFile(null);
+    } else {
+      if (connectionMode === "file") {
+        if (!selectedFile) return;
+        const newDb: DatabaseItem = {
+          id: Math.random().toString(),
+          name: selectedFile.name.split(".")[0],
+          type: uploadType as any,
+          size: (selectedFile.size / 1024 / 1024).toFixed(2) + " MB",
+          records: 0,
+          lastModified: new Date().toISOString().split("T")[0],
+        };
+        setDatabases([...databases, newDb]);
+        setSelectedFile(null);
+      } else {
+        if (!remoteConfig.ip || !remoteConfig.port || !remoteConfig.dbName)
+          return;
+        const newDb: DatabaseItem = {
+          id: Math.random().toString(),
+          name: remoteConfig.dbName,
+          type: uploadType as any,
+          size: "Remote",
+          records: 0,
+          lastModified: new Date().toISOString().split("T")[0],
+        };
+        setDatabases([...databases, newDb]);
+        setRemoteConfig({
+          ip: "",
+          port: "",
+          dbName: "",
+          username: "",
+          password: "",
+        });
+      }
     }
   };
 
@@ -271,14 +305,122 @@ export default function DatabasePage() {
                 </div>
               </div>
             ) : (
-              <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="file">File</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  accept=".sql,.dump"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                />
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 p-1 bg-muted rounded-lg">
+                  <Button
+                    variant={connectionMode === "file" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setConnectionMode("file")}
+                    className="flex-1 h-7 text-xs"
+                  >
+                    File Upload
+                  </Button>
+                  <Button
+                    variant={
+                      connectionMode === "remote" ? "secondary" : "ghost"
+                    }
+                    size="sm"
+                    onClick={() => setConnectionMode("remote")}
+                    className="flex-1 h-7 text-xs"
+                  >
+                    Remote Connect
+                  </Button>
+                </div>
+
+                {connectionMode === "file" ? (
+                  <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="file">File</Label>
+                    <div
+                      className="relative border-2 border-dashed rounded-lg p-8 hover:bg-muted/50 transition-colors text-center cursor-pointer border-muted-foreground/25 hover:border-primary/50 group"
+                      onClick={() => document.getElementById("file")?.click()}
+                    >
+                      <input
+                        id="file"
+                        type="file"
+                        accept=".sql,.dump"
+                        className="hidden"
+                        onChange={(e) =>
+                          setSelectedFile(e.target.files?.[0] || null)
+                        }
+                      />
+                      <div className="flex flex-col items-center gap-2">
+                        {selectedFile ? (
+                          <>
+                            <FileSpreadsheet className="h-10 w-10 text-primary animate-bounce" />
+                            <div className="text-sm font-medium text-foreground">
+                              {selectedFile.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                            </div>
+                            <span className="text-xs text-primary hover:underline mt-2 font-medium">
+                              Change file
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="p-3 rounded-full bg-muted group-hover:bg-background transition-colors">
+                              <Upload className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                            </div>
+                            <div className="text-sm font-medium mt-2">
+                              Click to upload
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              or drag and drop .sql, .dump
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="col-span-2 grid w-full items-center gap-1.5">
+                        <Label htmlFor="remote-ip">IP Address</Label>
+                        <Input
+                          id="remote-ip"
+                          placeholder="127.0.0.1"
+                          value={remoteConfig.ip}
+                          onChange={(e) =>
+                            setRemoteConfig({
+                              ...remoteConfig,
+                              ip: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label htmlFor="remote-port">Port</Label>
+                        <Input
+                          id="remote-port"
+                          placeholder="5432"
+                          value={remoteConfig.port}
+                          onChange={(e) =>
+                            setRemoteConfig({
+                              ...remoteConfig,
+                              port: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label htmlFor="remote-dbname">Database Name</Label>
+                      <Input
+                        id="remote-dbname"
+                        placeholder="my_database"
+                        value={remoteConfig.dbName}
+                        onChange={(e) =>
+                          setRemoteConfig({
+                            ...remoteConfig,
+                            dbName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -288,11 +430,17 @@ export default function DatabasePage() {
               disabled={
                 uploadType === "MinIO"
                   ? !minioConfig.ip || !minioConfig.port || !minioConfig.bucket
-                  : !selectedFile
+                  : connectionMode === "file"
+                  ? !selectedFile
+                  : !remoteConfig.ip ||
+                    !remoteConfig.port ||
+                    !remoteConfig.dbName
               }
               onClick={handleUpload}
             >
-              {uploadType === "MinIO" ? "Connect" : "Upload"}
+              {uploadType === "MinIO" || connectionMode === "remote"
+                ? "Connect"
+                : "Upload"}
             </Button>
           </CardFooter>
         </Card>

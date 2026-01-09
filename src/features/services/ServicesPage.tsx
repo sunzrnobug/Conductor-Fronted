@@ -14,9 +14,18 @@ import {
   Terminal,
   Activity,
   Box,
+  File,
+  HardDrive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -35,6 +44,29 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+
+// Mock Data Source for Dropdown
+const availableDataSources = [
+  { id: "1", name: "users_db", type: "PostgreSQL", host: "192.168.1.10" },
+  { id: "2", name: "orders_db", type: "MySQL", host: "192.168.1.11" },
+  { id: "3", name: "logs_bucket", type: "MinIO", host: "192.168.1.12" },
+  { id: "4", name: "local_sqlite", type: "SQLite", host: "localhost" },
+];
+
+const getDataSourceIcon = (type: string) => {
+  switch (type) {
+    case "PostgreSQL":
+      return <Database className="w-4 h-4 text-blue-500" />;
+    case "MySQL":
+      return <Database className="w-4 h-4 text-orange-500" />;
+    case "MinIO":
+      return <HardDrive className="w-4 h-4 text-red-500" />;
+    case "SQLite":
+      return <File className="w-4 h-4 text-gray-500" />;
+    default:
+      return <Database className="w-4 h-4" />;
+  }
+};
 
 // Mock Data
 interface Service {
@@ -528,12 +560,55 @@ export default function ServicesPage() {
                     >
                       {key}
                     </Label>
-                    <Input
-                      id={key}
-                      value={value}
-                      onChange={(e) => handleEnvVarChange(key, e.target.value)}
-                      className="font-mono text-sm h-8"
-                    />
+                    {key === "DB_HOST" ? (
+                      <Select
+                        value={value}
+                        onValueChange={(newValue) =>
+                          handleEnvVarChange(key, newValue)
+                        }
+                      >
+                        <SelectTrigger className="font-mono text-sm h-8">
+                          <div className="flex items-center gap-2">
+                            {/* Try to find matching DS to show icon in trigger too */}
+                            {(() => {
+                              const ds = availableDataSources.find(
+                                (d) => d.host === value
+                              );
+                              if (ds) {
+                                return (
+                                  <>
+                                    {getDataSourceIcon(ds.type)}
+                                    <span>{value}</span>
+                                  </>
+                                );
+                              }
+                              return <span className="truncate">{value}</span>;
+                            })()}
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableDataSources.map((ds) => (
+                            <SelectItem key={ds.id} value={ds.host}>
+                              <div className="flex items-center gap-2">
+                                {getDataSourceIcon(ds.type)}
+                                <span>
+                                  {ds.name} ({ds.host})
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id={key}
+                        value={value}
+                        onChange={(e) =>
+                          handleEnvVarChange(key, e.target.value)
+                        }
+                        className="font-mono text-sm h-8"
+                      />
+                    )}
                   </div>
                 ))}
                 {Object.keys(editedEnvVars).length === 0 && (
